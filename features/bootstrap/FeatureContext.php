@@ -1,9 +1,6 @@
 <?php
 
 use Behat\Behat\Context\Context;
-use Behat\Gherkin\Node\PyStringNode;
-use Behat\Gherkin\Node\TableNode;
-use Behat\Behat\Tester\Exception\PendingException;
 use Symfony\Component\HttpClient\HttpClient;
 
 /**
@@ -11,6 +8,7 @@ use Symfony\Component\HttpClient\HttpClient;
  */
 class FeatureContext implements Context
 {
+    protected $response;
     /**
      * Initializes context.
      *
@@ -28,7 +26,14 @@ class FeatureContext implements Context
      */
     public function iAmAnUnauthenticatedUser()
     {
-        throw new PendingException();
+        $httpClient = HttpClient::create();
+        $this->response = $httpClient->request("GET", "http://localhost:8000/customer");
+
+        if ($this->response->getStatusCode() != 200) {
+            throw new Exception("Not able to access");
+        }
+
+        return true;
     }
 
     /**
@@ -36,7 +41,16 @@ class FeatureContext implements Context
      */
     public function iRequestAListOfCustomersFrom($arg1)
     {
-        throw new PendingException();
+        $httpClient = HttpClient::create();
+        $this->response = $httpClient->request("GET", $arg1);
+
+        $responseCode = $this->response->getStatusCode();
+
+        if ($responseCode != 200) {
+            throw new Exception("Expected a 200, but received " . $responseCode);
+        }
+
+        return true;
     }
 
     /**
@@ -44,6 +58,14 @@ class FeatureContext implements Context
      */
     public function theResultsShouldIncludeACustomerWithId($arg1)
     {
-        throw new PendingException();
+        $customers = json_decode($this->response->getContent());
+
+        foreach($customers as $customer) {
+            if ($customer->id == $arg1) {
+                return true;
+            }
+        }
+
+        throw new Exception('Expected to find customer with an ID of ' . $arg1 . ' , but didnt');
     }
 }
