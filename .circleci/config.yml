@@ -16,6 +16,10 @@ jobs:
             - v1-dependencies-
 
       - run:
+          name: "Create Environment file"
+          command: mv .env.test .env
+
+      - run:
           name: "Install Dependencies"
           command: composer install -n --prefer-dist
 
